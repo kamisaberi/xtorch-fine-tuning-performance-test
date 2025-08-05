@@ -1,9 +1,10 @@
-#include "Food101Dataset.h"
 #include <torch/torch.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <chrono>
+#include <xtorch/xtorch.h>
+
 
 int main() {
     // --- 1. Configuration ---
@@ -14,21 +15,24 @@ int main() {
     }
 
     const std::string DATA_ROOT = "../food-101"; // Relative path to data
-    const std::string MODEL_PATH = "../resnet50_for_food101_finetuning.pt";
+    const std::string MODEL_PATH = "./resnet50_for_food101_finetuning.pt";
     const int NUM_EPOCHS = 3;
     const int BATCH_SIZE = 64;
     const double LEARNING_RATE = 0.001;
 
-    // --- 2. Data Loading ---
-    auto train_dataset = Food101Dataset(DATA_ROOT, "train")
-        .map(torch::data::transforms::Stack<>());
+    std::cout.precision(10);
+    int epochs = 1;
 
-    auto train_loader = torch::data::make_data_loader<torch::data::samplers::RandomSampler>(
-        std::move(train_dataset),
-        torch::data::DataLoaderOptions().batch_size(BATCH_SIZE).workers(8));
-
-    size_t dataset_size = train_dataset.size().value();
-    std::cout << "Training data loaded: " << dataset_size << " images." << std::endl;
+    std::vector<std::shared_ptr<xt::Module>> transform_list;
+    transform_list.push_back(std::make_shared<xt::transforms::image::Resize>(std::vector<int64_t>{224, 224}));
+    transform_list.push_back(
+        std::make_shared<xt::transforms::general::Normalize>(std::vector<float>{0.5, 0.5, 0.5},
+                                                             std::vector<float>{0.5, 0.5, 0.5}));
+    auto compose = std::make_unique<xt::transforms::Compose>(transform_list);
+    auto dataset = xt::datasets::Food101("/home/kami/Documents/datasets/", xt::datasets::DataMode::TRAIN, false,
+                                         std::move(compose));
+    xt::dataloaders::ExtendedDataLoader data_loader(dataset, BATCH_SIZE, true, 16, 2);
+    torch::Device device(torch::kCUDA);
 
     // --- 3. Model Loading and Setup ---
     torch::jit::script::Module model = torch::jit::load(MODEL_PATH);
