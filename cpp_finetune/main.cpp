@@ -8,7 +8,6 @@
 
 int main() {
 
-    const std::string DATA_ROOT = "../food-101"; // Relative path to data
     const std::string MODEL_PATH = "./resnet50_for_food101_finetuning.pt";
     const int NUM_EPOCHS = 3;
     const int BATCH_SIZE = 64;
@@ -25,7 +24,7 @@ int main() {
     auto compose = std::make_unique<xt::transforms::Compose>(transform_list);
     auto dataset = xt::datasets::Food101("/home/kami/Documents/datasets/", xt::datasets::DataMode::TRAIN, false,
                                          std::move(compose));
-    xt::dataloaders::ExtendedDataLoader data_loader(dataset, BATCH_SIZE, true, 16, 2);
+    xt::dataloaders::ExtendedDataLoader data_loader(dataset, BATCH_SIZE, true, 32, 20);
     torch::Device device(torch::kCUDA);
 
     // --- 3. Model Loading and Setup ---
@@ -48,9 +47,9 @@ int main() {
     torch::optim::Adam optimizer(params_to_update, torch::optim::AdamOptions(LEARNING_RATE));
 
     std::cout << "\nStarting C++ fine-tuning on Food-101..." << std::endl;
-    auto start_time = std::chrono::high_resolution_clock::now();
-    model.train();
 
+    model.train();
+    auto start_time = std::chrono::high_resolution_clock::now();
     for (int epoch = 0; epoch < NUM_EPOCHS; ++epoch) {
         double running_loss = 0.0;
         int64_t batch_idx = 0;
@@ -66,7 +65,7 @@ int main() {
             loss.backward();
             optimizer.step();
 
-            running_loss += loss.item<double>() * inputs.size(0);
+            //running_loss += loss.item<double>() * inputs.size(0);
 
             if (++batch_idx % 100 == 0) {
                 cout << "Batch: " << batch_idx << " Loss:" << loss.item() << endl;
@@ -79,7 +78,7 @@ int main() {
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end_time - start_time;
     std::cout << "\nC++ fine-tuning finished in " << elapsed.count() << " seconds." << std::endl;
-    model.save("food101_finetuned_from_cpp.pt");
+    //model.save("food101_finetuned_from_cpp.pt");
 
     return 0;
 }
