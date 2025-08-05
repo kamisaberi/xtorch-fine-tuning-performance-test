@@ -7,12 +7,6 @@
 
 
 int main() {
-    // --- 1. Configuration ---
-    torch::Device device = torch::kCPU;
-    if (torch::cuda::is_available()) {
-        device = torch::kCUDA;
-        std::cout << "Using device: CUDA" << std::endl;
-    }
 
     const std::string DATA_ROOT = "../food-101"; // Relative path to data
     const std::string MODEL_PATH = "./resnet50_for_food101_finetuning.pt";
@@ -38,7 +32,7 @@ int main() {
     torch::jit::script::Module model = torch::jit::load(MODEL_PATH);
 
     std::vector<torch::Tensor> params_to_update;
-    for (auto& param : model.named_parameters()) {
+    for (auto param : model.named_parameters()) {
         if (param.name.find("fc") != std::string::npos) {
             param.value.set_requires_grad(true);
             params_to_update.push_back(param.value);
@@ -60,9 +54,9 @@ int main() {
         double running_loss = 0.0;
         int64_t batch_idx = 0;
 
-        for (auto& batch : *train_loader) {
-            auto inputs = batch.data.to(device, true); // non_blocking
-            auto labels = batch.target.to(device, true);
+        for (auto& batch : data_loader) {
+            auto inputs = batch.first.to(device, true); // non_blocking
+            auto labels = batch.second.to(device, true);
 
             optimizer.zero_grad();
             auto outputs = model.forward({inputs}).toTensor();
@@ -74,13 +68,11 @@ int main() {
             running_loss += loss.item<double>() * inputs.size(0);
 
             if (++batch_idx % 100 == 0) {
-                std::cout << "  Epoch [" << epoch + 1 << "/" << NUM_EPOCHS
-                          << "], Batch [" << batch_idx << "/" << (dataset_size/BATCH_SIZE)
-                          << "], Loss: " << loss.item<double>() << std::endl;
+                cout << "Batch: " << batch_idx << " Loss:" << loss.item() << endl;
             }
         }
-        double epoch_loss = running_loss / dataset_size;
-        std::cout << "Epoch " << epoch + 1 << " Summary -> Loss: " << epoch_loss << std::endl;
+        //double epoch_loss = running_loss / dataset_size;
+        //std::cout << "Epoch " << epoch + 1 << " Summary -> Loss: " << epoch_loss << std::endl;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
