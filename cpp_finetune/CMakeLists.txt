@@ -1,14 +1,46 @@
-cmake_minimum_required(VERSION 3.10)
-project(LibTorchFineTuningFood101)
+cmake_minimum_required(VERSION 3.28 FATAL_ERROR)
+project(cpp_finetune)
 
-set(CMAKE_CXX_STANDARD 17) # Use C++17 for std::filesystem
-set(CMAKE_PREFIX_PATH "/path/to/your/libtorch") # <-- IMPORTANT: CHANGE THIS
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+    message(STATUS "Setting default build type to: ${CMAKE_BUILD_TYPE}")
+endif()
 
+list(APPEND CMAKE_PREFIX_PATH /home/kami/libs/cpp/libtorch/)
 find_package(Torch REQUIRED)
+find_package(xTorch REQUIRED)
+find_package(LibLZMA REQUIRED)
+find_package(LibArchive REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(SndFile REQUIRED)
 
-add_executable(cpp_finetune main.cpp)
-target_link_libraries(cpp_finetune PRIVATE torch_cpu torch_cuda c10 Aten ${OpenCV_LIBS})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set_property(TARGET cpp_finetune PROPERTY CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=1")
+
+set(TEST_LIBRARIES ${CURL_LIBRARIES}
+        ${TORCH_LIBRARIES}
+        ${OpenCV_LIBS}
+        ${ZLIB_LIBS}
+        ${ZIP_LIBRARIES}
+        zip
+        ${ZLIB_LIBRARIES}
+        ${LIBTAR_LIBRARY}
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        LibLZMA::LibLZMA
+        ${LibArchive_LIBRARIES}
+        ${XTORCH_LIBRARIES}
+        xTorch::xTorch
+
+
+)
+
+add_executable(main main.cpp)
+target_link_libraries(main "${TORCH_LIBRARIES}")
+set_property(TARGET main PROPERTY CXX_STANDARD 17)
+target_include_directories(main PRIVATE ${LIBTAR_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS} ${LibArchive_INCLUDE_DIRS} ${XTORCH_INCLUDE_DIRS})
+target_link_libraries(main ${TEST_LIBRARIES})
