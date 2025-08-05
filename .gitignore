@@ -1,5 +1,5 @@
- 
 .idea
 resnet50_for_food101_finetuning.pt
+food101_finetuned_from_python.pt
 cpp_finetune/build
 cpp_finetune/cmake-build-debug
