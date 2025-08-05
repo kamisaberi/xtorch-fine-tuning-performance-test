@@ -9,7 +9,7 @@ import os
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-DATA_DIR = '.' # Directory where food-101 folder exists
+DATA_DIR = '/home/kami/Documents/datasets' # Directory where food-101 folder exists
 MODEL_PATH = 'resnet50_for_food101_finetuning.pt'
 NUM_EPOCHS = 3 # Food-101 is large, 3 epochs is a good start
 BATCH_SIZE = 64 # Use a larger batch size if your GPU allows
@@ -24,7 +24,7 @@ data_transforms = transforms.Compose([
 ])
 
 # Torchvision handles downloading and parsing automatically
-train_dataset = datasets.Food101(root=DATA_DIR, split='train', transform=data_transforms, download=True)
+train_dataset = datasets.Food101(root=DATA_DIR, split='train', transform=data_transforms, download=False)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, pin_memory=True)
 print(f"Training data loaded: {len(train_dataset)} images.")
 

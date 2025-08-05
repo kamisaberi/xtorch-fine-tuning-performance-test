@@ -1,1 +1,4 @@
  
+.idea
+resnet50_for_food101_finetuning.pt
+cpp_finetune/build
